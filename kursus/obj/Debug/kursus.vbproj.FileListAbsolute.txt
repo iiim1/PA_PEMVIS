@@ -1,0 +1,21 @@
+C:\Users\ASUS\AppData\Local\Temporary Projects\kursus\bin\Debug\kursus.exe.config
+D:\SMT4\PemVis\kursus\kursus\bin\Debug\kursus.exe.config
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormEnrollBayar.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormKelas.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormKursus.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormLaporanPembayaran.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormLogin.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormPesertaKelas.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormSettings.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormUser.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.FormUtama.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.Resources.resources
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.vbproj.GenerateResource.Cache
+D:\SMT4\PemVis\kursus\kursus\bin\Debug\kursus.exe
+D:\SMT4\PemVis\kursus\kursus\bin\Debug\kursus.pdb
+D:\SMT4\PemVis\kursus\kursus\bin\Debug\kursus.xml
+D:\SMT4\PemVis\kursus\kursus\bin\Debug\mysql.data.dll
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.vbprojResolveAssemblyReference.cache
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.exe
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.xml
+D:\SMT4\PemVis\kursus\kursus\obj\Debug\kursus.pdb
