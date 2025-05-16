@@ -1,27 +1,31 @@
-﻿Imports MySql.Data.MySqlClient
+Imports MySql.Data.MySqlClient
 
 Public Class FormKelas
     Dim selectedID As Integer = -1
     Dim isGeneratingSchedule As Boolean = False
 
+    'Input hanya angka untuk durasi
     Private Sub txtDurasi_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtDurasi.KeyPress
         If Not Char.IsDigit(e.KeyChar) And Not Char.IsControl(e.KeyChar) Then
             e.Handled = True
         End If
     End Sub
 
+    'Input hanya angka untuk biaya
     Private Sub txtBiaya_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtBiaya.KeyPress
         If Not Char.IsDigit(e.KeyChar) And Not Char.IsControl(e.KeyChar) Then
             e.Handled = True
         End If
     End Sub
 
+    'Input hanya angka untuk ruangan
     Private Sub txtRuangan_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtRuangan.KeyPress
         If Not Char.IsDigit(e.KeyChar) And Not Char.IsControl(e.KeyChar) Then
             e.Handled = True
         End If
     End Sub
 
+    'Input hanya angka untuk maksimal peserta
     Private Sub txtMaksimalPeserta_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtMaksimalPeserta.KeyPress
         If Not Char.IsDigit(e.KeyChar) And Not Char.IsControl(e.KeyChar) Then
             e.Handled = True
@@ -84,6 +88,7 @@ Public Class FormKelas
     End Sub
 
     Sub isiCombo()
+        ' Isi ComboBox Kursus
         cbKursus.Items.Clear()
         CMD = New MySqlCommand("SELECT * FROM kursus ORDER BY NamaKursus", CONN)
         RD = CMD.ExecuteReader()
@@ -94,6 +99,7 @@ Public Class FormKelas
         cbKursus.DisplayMember = "Text"
         cbKursus.ValueMember = "Value"
 
+        ' Isi ComboBox Instruktur/Tutor dengan data dari detailtutor dan user
         cbInstruktur.Items.Clear()
         CMD = New MySqlCommand("SELECT u.IDUser, u.NamaLengkap, dt.Keahlian, dt.TarifPersesi " & _
                                "FROM user u " & _
@@ -116,6 +122,7 @@ Public Class FormKelas
         cbInstruktur.DisplayMember = "Text"
         cbInstruktur.ValueMember = "Value"
 
+        ' Isi ComboBox Hari
         cbHari.Items.Clear()
         cbHari.Items.AddRange(New String() {"Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"})
     End Sub
@@ -132,17 +139,17 @@ Public Class FormKelas
         dtpTanggalMulai.Format = DateTimePickerFormat.Short
         dtpTanggalSelesai.MinDate = dtpTanggalMulai.Value
         dtpTanggalSelesai.Format = DateTimePickerFormat.Short
-        btnHapus.Enabled = False
-        btnUbah.Enabled = False
-        If FormUtama.roleAkses = "Front Office" Or FormUtama.roleAkses = "Tutor" Or FormUtama.roleAkses = "Peserta" Then
+        If FormUtama.roleAkses = "Tutor" Or FormUtama.roleAkses = "Front Office" Or FormUtama.roleAkses = "Peserta" Then
             GroupBox1.Visible = False
             btnSimpan.Visible = False
             btnUbah.Visible = False
-            btnBatal.Visible = False
             btnHapus.Visible = False
+            btnBatal.Visible = False
+
         End If
     End Sub
 
+    'set tanggal selesai sesudah tanggal mulai
     Private Sub dtpTanggalMulai_ValueChanged(sender As Object, e As EventArgs) Handles dtpTanggalMulai.ValueChanged
         dtpTanggalSelesai.MinDate = dtpTanggalMulai.Value
 
@@ -152,6 +159,7 @@ Public Class FormKelas
     End Sub
 
     Private Function ValidateInput() As Boolean
+        ' Validasi input dasar
         If cbKursus.SelectedIndex = -1 Then
             MessageBox.Show("Pilih kursus terlebih dahulu!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             cbKursus.Focus()
@@ -176,6 +184,7 @@ Public Class FormKelas
             Return False
         End If
 
+        ' Validasi durasi
         Dim durasi As Integer
         If Not Integer.TryParse(txtDurasi.Text, durasi) OrElse durasi <= 0 Then
             MessageBox.Show("Durasi harus berupa angka positif!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -183,6 +192,7 @@ Public Class FormKelas
             Return False
         End If
 
+        ' Validasi biaya
         Dim biaya As Decimal
         If Not Decimal.TryParse(txtBiaya.Text, biaya) OrElse biaya < 0 Then
             MessageBox.Show("Biaya harus berupa angka positif!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -190,6 +200,7 @@ Public Class FormKelas
             Return False
         End If
 
+        ' Validasi maksimal peserta
         Dim maksimalPeserta As Integer
         If Not Integer.TryParse(txtMaksimalPeserta.Text, maksimalPeserta) OrElse maksimalPeserta <= 0 Then
             MessageBox.Show("Maksimal peserta harus berupa angka positif!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -197,6 +208,7 @@ Public Class FormKelas
             Return False
         End If
 
+        ' Validasi tanggal
         If dtpTanggalMulai.Value > dtpTanggalSelesai.Value Then
             MessageBox.Show("Tanggal mulai tidak boleh lebih besar dari tanggal selesai!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             dtpTanggalMulai.Focus()
@@ -207,19 +219,23 @@ Public Class FormKelas
     End Function
 
     Private Sub btnSimpan_Click(sender As Object, e As EventArgs) Handles btnSimpan.Click
+        ' Validasi input sebelum menyimpan
         If Not ValidateInput() Then
             Exit Sub
         End If
 
+        ' Menggunakan transaction untuk memastikan semua operasi berhasil
         Dim transaction As MySqlTransaction = Nothing
 
         Try
+            ' Pastikan koneksi terbuka
             If CONN.State = ConnectionState.Closed Then
                 CONN.Open()
             End If
 
             transaction = CONN.BeginTransaction()
 
+            ' Simpan data kelas baru
             CMD = New MySqlCommand("INSERT INTO kelas (KodeKursus, IDUser, Hari, JamMulai, Durasi, Ruangan, " & _
                                   "Biaya, MaksimalPeserta, JumlahPeserta, TanggalMulai, TanggalSelesai, KebutuhanAlat) " & _
                                   "VALUES (@kursus, @instruktur, @hari, @jam, @durasi, @ruangan, @biaya, @maksimalPeserta, 0, " & _
@@ -238,8 +254,10 @@ Public Class FormKelas
                 .AddWithValue("@kebutuhanAlat", txtKebutuhanAlat.Text)
             End With
 
+            ' Mendapatkan ID kelas baru
             Dim newClassId As Integer = Convert.ToInt32(CMD.ExecuteScalar())
 
+            ' Commit transaksi jika semua berhasil
             transaction.Commit()
 
             MessageBox.Show("Data kelas berhasil disimpan.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -247,11 +265,13 @@ Public Class FormKelas
             Kosong()
 
         Catch ex As Exception
+            ' Rollback transaksi jika terjadi kesalahan
             If transaction IsNot Nothing Then
                 transaction.Rollback()
             End If
             MessageBox.Show("Error saat menyimpan data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
+            ' Pastikan koneksi ditutup
             If CONN.State = ConnectionState.Open Then
                 CONN.Close()
             End If
@@ -264,19 +284,23 @@ Public Class FormKelas
             Exit Sub
         End If
 
+        ' Validasi input sebelum memperbarui
         If Not ValidateInput() Then
             Exit Sub
         End If
 
+        ' Menggunakan transaction untuk memastikan semua operasi berhasil
         Dim transaction As MySqlTransaction = Nothing
 
         Try
+            ' Pastikan koneksi terbuka
             If CONN.State = ConnectionState.Closed Then
                 CONN.Open()
             End If
 
             transaction = CONN.BeginTransaction()
 
+            ' Perbarui data kelas
             CMD = New MySqlCommand("UPDATE kelas SET KodeKursus=@kursus, IDUser=@instruktur, Hari=@hari, " & _
                                   "JamMulai=@jam, Durasi=@durasi, Ruangan=@ruangan, Biaya=@biaya, " & _
                                   "MaksimalPeserta=@maksimalPeserta, TanggalMulai=@tanggalMulai, " & _
@@ -298,6 +322,7 @@ Public Class FormKelas
             End With
             CMD.ExecuteNonQuery()
 
+            ' Commit transaksi jika semua berhasil
             transaction.Commit()
 
             MessageBox.Show("Data kelas dan jadwal berhasil diubah.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -305,11 +330,13 @@ Public Class FormKelas
             Kosong()
 
         Catch ex As Exception
+            ' Rollback transaksi jika terjadi kesalahan
             If transaction IsNot Nothing Then
                 transaction.Rollback()
             End If
             MessageBox.Show("Error saat mengubah data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
+            ' Pastikan koneksi ditutup
             If CONN.State = ConnectionState.Open Then
                 CONN.Close()
             End If
@@ -322,17 +349,20 @@ Public Class FormKelas
             Exit Sub
         End If
 
+        ' Konfirmasi penghapusan
         Dim result As DialogResult = MessageBox.Show(
             "Yakin ingin menghapus data ini? Semua data terkait seperti jadwal dan absensi juga akan terhapus.",
             "Konfirmasi", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
 
         If result = DialogResult.Yes Then
             Try
+                ' Cek apakah ada peserta yang terdaftar di kelas ini
                 CMD = New MySqlCommand("SELECT JumlahPeserta FROM kelas WHERE IDKelas = @id", CONN)
                 CMD.Parameters.AddWithValue("@id", selectedID)
                 Dim jumlahPeserta As Integer = Convert.ToInt32(CMD.ExecuteScalar())
 
                 If jumlahPeserta > 0 Then
+                    ' Jika ada peserta terdaftar, beri peringatan dan konfirmasi tambahan
                     Dim confirm As DialogResult = MessageBox.Show(
                         "Terdapat " & jumlahPeserta & " peserta terdaftar di kelas ini. " &
                         "Penghapusan kelas akan menghapus data pendaftaran peserta. Tetap lanjutkan?",
@@ -343,6 +373,7 @@ Public Class FormKelas
                     End If
                 End If
 
+                ' Hapus kelas (referential integrity akan menghapus data terkait)
                 CMD = New MySqlCommand("DELETE FROM kelas WHERE IDKelas = @id", CONN)
                 CMD.Parameters.AddWithValue("@id", selectedID)
                 CMD.ExecuteNonQuery()
@@ -365,8 +396,10 @@ Public Class FormKelas
         If e.RowIndex >= 0 Then
             Dim row = DataGridView1.Rows(e.RowIndex)
 
+            ' Menyimpan ID kelas yang dipilih
             selectedID = Convert.ToInt32(row.Cells("IDKelas").Value)
 
+            ' Set nilai di ComboBox Kursus
             For i As Integer = 0 To cbKursus.Items.Count - 1
                 If DirectCast(cbKursus.Items(i), Object).Value.ToString() = row.Cells("KodeKursus").Value.ToString() Then
                     cbKursus.SelectedIndex = i
@@ -374,6 +407,7 @@ Public Class FormKelas
                 End If
             Next
 
+            ' Set nilai di ComboBox Instruktur jika ada
             If Not IsDBNull(row.Cells("IDUser").Value) Then
                 For i As Integer = 0 To cbInstruktur.Items.Count - 1
                     If DirectCast(cbInstruktur.Items(i), Object).Value.ToString() = row.Cells("IDUser").Value.ToString() Then
@@ -385,8 +419,10 @@ Public Class FormKelas
                 cbInstruktur.SelectedIndex = -1
             End If
 
+            ' Set nilai lainnya
             cbHari.Text = row.Cells("Hari").Value.ToString()
 
+            ' Set nilai jam mulai
             If Not IsDBNull(row.Cells("JamMulai").Value) Then
                 Dim jamStr As String = row.Cells("JamMulai").Value.ToString()
                 Dim jamParts As String() = jamStr.Split(":")
@@ -402,11 +438,13 @@ Public Class FormKelas
                 End If
             End If
 
+            ' Set nilai lainnya
             txtDurasi.Text = row.Cells("Durasi").Value.ToString()
             txtRuangan.Text = row.Cells("Ruangan").Value.ToString()
             txtBiaya.Text = row.Cells("Biaya").Value.ToString()
             txtMaksimalPeserta.Text = row.Cells("MaksimalPeserta").Value.ToString()
 
+            ' Set nilai tanggal
             If Not IsDBNull(row.Cells("TanggalMulai").Value) Then
                 dtpTanggalMulai.Value = Convert.ToDateTime(row.Cells("TanggalMulai").Value)
             End If
@@ -415,11 +453,13 @@ Public Class FormKelas
                 dtpTanggalSelesai.Value = Convert.ToDateTime(row.Cells("TanggalSelesai").Value)
             End If
 
+            ' Set nilai kebutuhan alat jika ada
             txtKebutuhanAlat.Text = If(IsDBNull(row.Cells("KebutuhanAlat").Value), "",
                                     row.Cells("KebutuhanAlat").Value.ToString())
         End If
     End Sub
 
+    ' Menambahkan fitur pencarian
     Private Sub txtCari_TextChanged(sender As Object, e As EventArgs) Handles txtCari.TextChanged
         Try
             Dim keyword As String = txtCari.Text.Trim()
@@ -443,7 +483,6 @@ Public Class FormKelas
             MessageBox.Show("Error saat mencari data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-
     Private Sub PictureBox2_Click(sender As Object, e As EventArgs) Handles PictureBox2.Click
         Me.Close()
     End Sub
